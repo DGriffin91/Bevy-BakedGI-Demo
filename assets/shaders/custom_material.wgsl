@@ -1,4 +1,5 @@
 #import bevy_pbr::mesh_view_bind_group
+
 #import "shaders/util.wgsl"
 
 struct MaterialSetProp {
