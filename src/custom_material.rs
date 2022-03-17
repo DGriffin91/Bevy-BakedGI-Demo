@@ -19,33 +19,12 @@ use bevy::{
     },
 };
 
-use bevy_egui::egui;
-
 #[derive(Debug, Clone, Copy, AsStd140)]
 pub struct MaterialSetProp {
     pub scale: f32,
     pub contrast: f32,
     pub brightness: f32,
     pub blend: f32,
-}
-
-fn log_slider<Num: egui::emath::Numeric>(
-    ui: &mut egui::Ui,
-    value: &mut Num,
-    range: RangeInclusive<Num>,
-    text: &str,
-) {
-    ui.add(egui::Slider::new(value, range).logarithmic(true).text(text));
-}
-
-impl MaterialSetProp {
-    pub fn build_ui(&mut self, ui: &mut egui::Ui, label: &str) {
-        ui.label(label);
-        log_slider(ui, &mut self.scale, 0.0..=100.0, "scale");
-        log_slider(ui, &mut self.contrast, 0.0..=10.0, "contrast");
-        log_slider(ui, &mut self.brightness, 0.0..=40.0, "brightness");
-        log_slider(ui, &mut self.blend, 0.0..=1.0, "blend");
-    }
 }
 
 #[derive(Debug, Clone, Copy, AsStd140)]
@@ -63,28 +42,6 @@ pub struct MaterialProperties {
     //pub directional_light_color: Vec3,
 }
 
-impl MaterialProperties {
-    pub fn build_ui(&mut self, ui: &mut egui::Ui) {
-        if ui.button("Debug Print").clicked() {
-            dbg!(&self);
-        }
-        self.lightmap.build_ui(ui, "lightmap");
-        self.base_a.build_ui(ui, "base_a");
-        self.base_b.build_ui(ui, "base_b");
-        self.vary_a.build_ui(ui, "vary_a");
-        self.vary_b.build_ui(ui, "vary_b");
-        self.reflection.build_ui(ui, "reflection");
-        self.reflection_mask.build_ui(ui, "reflection_mask");
-        self.walls.build_ui(ui, "walls");
-        self.mist.build_ui(ui, "mist");
-        ui.label("-------------");
-        ui.add(
-            egui::Slider::new(&mut self.directional_light_blend, 0.0..=5.0)
-                .text("directional_light_blend"),
-        );
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct MaterialTexture {
     pub texture_handle: Option<Handle<Image>>,
@@ -93,16 +50,6 @@ pub struct MaterialTexture {
 }
 
 impl MaterialTexture {
-    pub fn build_ui(&mut self, ui: &mut egui::Ui, asset_server: &Res<AssetServer>) {
-        ui.label(&self.name);
-        ui.horizontal(|ui| {
-            ui.text_edit_singleline(&mut self.path);
-            if ui.button("LOAD").clicked() {
-                self.texture_handle = Some(asset_server.load(&self.path));
-            }
-        });
-    }
-
     pub fn new(asset_server: &Res<AssetServer>, path: &str, name: &str) -> Self {
         MaterialTexture {
             texture_handle: Some(asset_server.load(path)),
@@ -118,21 +65,6 @@ impl MaterialTexture {
 pub struct CustomMaterial {
     pub material_properties: MaterialProperties,
     pub textures: [MaterialTexture; 5],
-}
-
-impl CustomMaterial {
-    pub fn build_ui(&mut self, ui: &mut egui::Ui, asset_server: &Res<AssetServer>) {
-        //self.material_properties.build_ui(ui);
-        ui.label("CustomMaterial");
-        if ui.button("Print Paths").clicked() {
-            for texture in &self.textures {
-                println!("{}", texture.path);
-            }
-        }
-        for texture in &mut self.textures {
-            texture.build_ui(ui, asset_server)
-        }
-    }
 }
 
 #[derive(Clone)]
