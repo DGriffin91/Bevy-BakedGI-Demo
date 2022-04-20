@@ -12,21 +12,21 @@ pub fn setup_room(
     asset_server: &Res<AssetServer>,
 ) {
     let variation_texture =
-        MaterialTexture::new(&asset_server, "textures/detail.jpg", "variation_texture");
-    let base_texture = MaterialTexture::new(&asset_server, "textures/concrete.jpg", "base_texture");
+        MaterialTexture::new(asset_server, "textures/detail.jpg", "variation_texture");
+    let base_texture = MaterialTexture::new(asset_server, "textures/concrete.jpg", "base_texture");
 
     let walls_texture =
-        MaterialTexture::new(&asset_server, "textures/concrete3.jpg", "walls_texture");
+        MaterialTexture::new(asset_server, "textures/concrete3.jpg", "walls_texture");
 
     let reflection_texture = MaterialTexture::new(
-        &asset_server,
+        asset_server,
         "textures/scene1/reflection.jpg",
         "reflection_texture",
     );
 
     //Building Objects
     let objects_lightmap = MaterialTexture::new(
-        &asset_server,
+        asset_server,
         "textures/scene2/objects_lightmap.jpg",
         "objects_lightmap",
     );
@@ -123,13 +123,13 @@ pub fn setup_room(
     commands.spawn().insert_bundle(MaterialMeshBundle {
         mesh: building_objects,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        material: material.clone(),
+        material,
         ..Default::default()
     });
 
     //Building Main
     let main_lightmap = MaterialTexture::new(
-        &asset_server,
+        asset_server,
         "textures/scene2/walls_lightmap.jpg",
         "main_lightmap",
     );
@@ -139,8 +139,8 @@ pub fn setup_room(
         material_properties,
         textures: [
             main_lightmap,
-            base_texture.clone(),
-            variation_texture.clone(),
+            base_texture,
+            variation_texture,
             reflection_texture,
             walls_texture,
         ],
@@ -149,7 +149,7 @@ pub fn setup_room(
     commands.spawn().insert_bundle(MaterialMeshBundle {
         mesh: building_main,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        material: material.clone(),
+        material,
         ..Default::default()
     });
 

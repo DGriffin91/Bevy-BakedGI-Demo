@@ -28,7 +28,7 @@ fn menu_ui(
     let window = windows.get_primary_mut().unwrap();
     let show_ui = window.is_focused() && !window.cursor_locked();
     if show_ui {
-        egui::Window::new("materials").show(egui_context.ctx_mut(), |ui| {
+        egui::Window::new("Settings").show(egui_context.ctx_mut(), |ui| {
             if ui.button("Load Level 1").clicked() {
                 for entity in query.iter() {
                     commands.entity(entity).despawn_recursive();
@@ -65,7 +65,7 @@ fn menu_ui(
                 if let Some(main_mat) = main_mat {
                     for handle in material_handles.iter_mut() {
                         if let Some(mat) = custom_materials.get_mut(&handle.clone()) {
-                            mat.material_properties = main_mat.material_properties.clone()
+                            mat.material_properties = main_mat.material_properties
                         }
                     }
                 }
