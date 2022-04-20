@@ -5,13 +5,11 @@ use crate::custom_material::{
 };
 use crate::emissive_material::EmissiveMaterial;
 
-use crate::LevelAsset;
-
 pub fn setup_room(
-    mut commands: Commands,
-    mut custom_materials: ResMut<Assets<CustomMaterial>>,
-    mut emissive_materials: ResMut<Assets<EmissiveMaterial>>,
-    asset_server: Res<AssetServer>,
+    commands: &mut Commands,
+    custom_materials: &mut Assets<CustomMaterial>,
+    emissive_materials: &mut Assets<EmissiveMaterial>,
+    asset_server: &Res<AssetServer>,
 ) {
     let variation_texture =
         MaterialTexture::new(&asset_server, "textures/detail.jpg", "variation_texture");
@@ -103,18 +101,12 @@ pub fn setup_room(
         ],
     });
 
-    commands
-        .spawn()
-        .insert_bundle(MaterialMeshBundle {
-            mesh: building_objects,
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            material: material.clone(),
-            ..Default::default()
-        })
-        .insert(LevelAsset {
-            material_properties,
-            material_handle: material,
-        });
+    commands.spawn().insert_bundle(MaterialMeshBundle {
+        mesh: building_objects,
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        material: material.clone(),
+        ..Default::default()
+    });
 
     //Building Main
     let main_lightmap = MaterialTexture::new(
@@ -135,18 +127,12 @@ pub fn setup_room(
         ],
     });
 
-    commands
-        .spawn()
-        .insert_bundle(MaterialMeshBundle {
-            mesh: building_main,
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            material: material.clone(),
-            ..Default::default()
-        })
-        .insert(LevelAsset {
-            material_properties,
-            material_handle: material,
-        });
+    commands.spawn().insert_bundle(MaterialMeshBundle {
+        mesh: building_main,
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        material: material.clone(),
+        ..Default::default()
+    });
 
     //Sky Box
     let skybox_texture = asset_server.load("textures/scene1/skybox.jpg");

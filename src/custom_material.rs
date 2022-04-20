@@ -122,7 +122,7 @@ pub struct CustomMaterial {
 
 impl CustomMaterial {
     pub fn build_ui(&mut self, ui: &mut egui::Ui, asset_server: &Res<AssetServer>) {
-        //self.material_properties.build_ui(ui);
+        self.material_properties.build_ui(ui);
         ui.label("CustomMaterial");
         if ui.button("Print Paths").clicked() {
             for texture in &self.textures {

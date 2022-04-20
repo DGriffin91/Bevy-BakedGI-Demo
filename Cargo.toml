@@ -1,10 +1,18 @@
 [package]
 name = "material_demo"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-bevy = {version  = "0.6", features = ["jpeg"]}
-bevy_flycam = "0.6"
-bevy_egui = "0.11"
+bevy = {version  = "0.7", features = ["jpeg"]}
+bevy_egui = "0.13"
+smooth-bevy-cameras = "0.4.0"
 rand = "*"
+
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
+
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
