@@ -1,60 +1,64 @@
-#import bevy_pbr::mesh_view_bind_group
+#import bevy_pbr::mesh_view_bindings
+#import bevy_pbr::mesh_bindings
 
-#import "shaders/util.wgsl"
+#import bevy_pbr::pbr_types
+#import bevy_pbr::utils
+#import bevy_pbr::clustered_forward
+#import bevy_pbr::lighting
+#import bevy_pbr::shadows
+#import bevy_pbr::pbr_functions
 
 struct MaterialSetProp {
-    scale: f32;
-    contrast: f32;
-    brightness: f32;
-    blend: f32;
-};
+    scale: f32,
+    contrast: f32,
+    brightness: f32,
+    blend: f32,
+}
 
 struct MaterialProperties {
-    lightmap: MaterialSetProp;
-    base_a: MaterialSetProp;
-    base_b: MaterialSetProp;
-    vary_a: MaterialSetProp;
-    vary_b: MaterialSetProp;
-    reflection: MaterialSetProp;
-    walls: MaterialSetProp;
-    reflection_mask: MaterialSetProp;
-    mist: MaterialSetProp;
-    directional_light_blend: f32;
-};
+    lightmap: MaterialSetProp,
+    base_a: MaterialSetProp,
+    base_b: MaterialSetProp,
+    vary_a: MaterialSetProp,
+    vary_b: MaterialSetProp,
+    reflection: MaterialSetProp,
+    walls: MaterialSetProp,
+    reflection_mask: MaterialSetProp,
+    mist: MaterialSetProp,
+    directional_light_blend: f32,
+}
 
-[[group(1), binding(0)]]
+@group(1) @binding(0)
 var<uniform> ma: MaterialProperties;
-[[group(1), binding(1)]]
+@group(1) @binding(1)
 var lightmap_texture: texture_2d<f32>;
-[[group(1), binding(2)]]
+@group(1) @binding(2)
 var lightmap_sampler: sampler;
-[[group(1), binding(3)]]
+@group(1) @binding(3)
 var base_texture: texture_2d<f32>;
-[[group(1), binding(4)]]
+@group(1) @binding(4)
 var base_sampler: sampler;
-[[group(1), binding(5)]]
+@group(1) @binding(5)
 var vary_texture: texture_2d<f32>;
-[[group(1), binding(6)]]
+@group(1) @binding(6)
 var vary_sampler: sampler;
-[[group(1), binding(7)]]
+@group(1) @binding(7)
 var reflection_texture: texture_2d<f32>;
-[[group(1), binding(8)]]
+@group(1) @binding(8)
 var reflection_sampler: sampler;
-[[group(1), binding(9)]]
+@group(1) @binding(9)
 var walls_texture: texture_2d<f32>;
-[[group(1), binding(10)]]
+@group(1) @binding(10)
 var walls_sampler: sampler;
 
 struct FragmentInput {
-    [[builtin(front_facing)]] is_front: bool;
-    [[builtin(position)]] frag_coord: vec4<f32>;
-    [[location(0)]] world_position: vec4<f32>;
-    [[location(1)]] world_normal: vec3<f32>;
-    [[location(2)]] uv: vec2<f32>;
+    @builtin(front_facing) is_front: bool,
+    @builtin(position) frag_coord: vec4<f32>,
+    #import bevy_pbr::mesh_vertex_output
 };
 
-[[stage(fragment)]]
-fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
+@fragment
+fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
 
     //------------------------------------------
     var N: vec3<f32> = normalize(in.world_normal);
@@ -86,18 +90,18 @@ fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     var ref_uv = normalize(reflect(V, N)).xy * ma.reflection.scale + var_tex_a.y * 0.01 + var_tex_b.y * 0.01; 
 
     var ref_sample = textureSample(reflection_texture, reflection_sampler, ref_uv * ma.reflection.scale).rgb;
-    var ref = mix(col, pow(ref_sample, vec3<f32>(ma.reflection.contrast)) * ma.reflection.brightness, ma.reflection.blend);
+    var refl = mix(col, pow(ref_sample, vec3<f32>(ma.reflection.contrast)) * ma.reflection.brightness, ma.reflection.blend);
 
     var puddle_mask = textureSample(vary_texture, vary_sampler, in.uv * ma.reflection_mask.scale + vec2<f32>(0.2, 0.0)).g;
     puddle_mask = 1.0-clamp(pow(puddle_mask, ma.reflection_mask.contrast)*ma.reflection_mask.brightness, 0.0, 1.0);
-    ref = mix(col, ref, vec3<f32>(puddle_mask*fresnel*0.9));
+    refl = mix(col, refl, vec3<f32>(puddle_mask*fresnel*0.9));
 
     var walls_mask = abs(in.world_normal.z + in.world_normal.x);
     var walls_tex = textureSample(walls_texture, walls_sampler, in.uv.yx * ma.walls.scale).rgb;
     walls_tex = pow(walls_tex, vec3<f32>(ma.walls.contrast)) * ma.walls.brightness;
     col = mix(col, walls_tex * col, walls_mask * ma.walls.blend);
 
-    col = mix(col, ref, clamp(ceil((in.world_normal.y - 0.99))*100.0,0.0,1.0));
+    col = mix(col, refl, clamp(ceil((in.world_normal.y - 0.99))*100.0,0.0,1.0));
 
     var mist = pow(clamp(ma.mist.scale-in.frag_coord.w,0.0,1.0), ma.mist.contrast) * ma.mist.brightness;
 
@@ -107,6 +111,6 @@ fn fragment(in: FragmentInput) -> [[location(0)]] vec4<f32> {
     
     col = col + col * shadow * vec3<f32>(1.0,0.9,0.5) * 4.0 * ma.directional_light_blend;
     col = mix(col, col + mist, ma.mist.blend);
-    return vec4<f32>(aces(col), 1.0);
+    return tone_mapping(vec4<f32>(col, 1.0));
     //return vec4<f32>(vec3<f32>(fresnel), 1.0);
 }

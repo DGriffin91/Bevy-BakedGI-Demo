@@ -1,36 +1,15 @@
 use bevy::prelude::*;
 
-use crate::custom_material::{
-    CustomMaterial, MaterialProperties, MaterialSetProp, MaterialTexture,
-};
+use crate::custom_material::{load_mark, CustomMaterial, MaterialProperties, MaterialSetProp};
 use crate::emissive_material::EmissiveMaterial;
 
 pub fn setup_room(
-    commands: &mut Commands,
+    com: &mut Commands,
     custom_materials: &mut Assets<CustomMaterial>,
     emissive_materials: &mut Assets<EmissiveMaterial>,
-    asset_server: &Res<AssetServer>,
+    ass: &Res<AssetServer>,
 ) {
-    let variation_texture =
-        MaterialTexture::new(asset_server, "textures/detail.jpg", "variation_texture");
-    let base_texture = MaterialTexture::new(asset_server, "textures/concrete.jpg", "base_texture");
-
-    let walls_texture =
-        MaterialTexture::new(asset_server, "textures/concrete3.jpg", "walls_texture");
-
-    let reflection_texture = MaterialTexture::new(
-        asset_server,
-        "textures/scene1/reflection.jpg",
-        "reflection_texture",
-    );
-
     //Building Objects
-    let objects_lightmap = MaterialTexture::new(
-        asset_server,
-        "textures/scene2/objects_lightmap.jpg",
-        "objects_lightmap",
-    );
-
     let material_properties = MaterialProperties {
         lightmap: MaterialSetProp {
             scale: 1.0,
@@ -89,74 +68,66 @@ pub fn setup_room(
         directional_light_blend: 0.6,
     };
 
-    let material = custom_materials.add(CustomMaterial {
+    let mut material = CustomMaterial {
         material_properties,
-        textures: [
-            objects_lightmap,
-            base_texture.clone(),
-            variation_texture.clone(),
-            reflection_texture.clone(),
-            walls_texture.clone(),
-        ],
-    });
+        lightmap: Some(ass.load("textures/scene2/objects_lightmap.jpg")),
+        lightmap_path: String::from("textures/scene2/objects_lightmap.jpg"),
+        base: Some(load_mark(com, &ass, "textures/concrete.jpg")),
+        base_path: String::from("textures/concrete.jpg"),
+        vary: Some(load_mark(com, &ass, "textures/detail.jpg")),
+        vary_path: String::from("textures/detail.jpg"),
+        reflection: Some(load_mark(com, &ass, "textures/scene1/reflection.jpg")),
+        reflection_path: String::from("textures/scene1/reflection.jpg"),
+        walls: Some(load_mark(com, &ass, "textures/concrete3.jpg")),
+        walls_path: String::from("textures/concrete3.jpg"),
+    };
 
-    let building_objects = asset_server.load("models/scene2/building.glb#Mesh0/Primitive0");
+    let material_handle = custom_materials.add(material.clone());
 
-    commands.spawn().insert_bundle(MaterialMeshBundle {
+    let building_objects = ass.load("models/scene2/building.glb#Mesh0/Primitive0");
+
+    com.spawn().insert_bundle(MaterialMeshBundle {
         mesh: building_objects,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        material: material.clone(),
+        material: material_handle.clone(),
         ..Default::default()
     });
 
-    let building_objects = asset_server.load("models/scene2/building.glb#Mesh2/Primitive0");
+    let building_objects = ass.load("models/scene2/building.glb#Mesh2/Primitive0");
 
-    commands.spawn().insert_bundle(MaterialMeshBundle {
+    com.spawn().insert_bundle(MaterialMeshBundle {
         mesh: building_objects,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        material: material.clone(),
+        material: material_handle.clone(),
         ..Default::default()
     });
 
-    let building_objects = asset_server.load("models/scene2/building.glb#Mesh3/Primitive0");
+    let building_objects = ass.load("models/scene2/building.glb#Mesh3/Primitive0");
 
-    commands.spawn().insert_bundle(MaterialMeshBundle {
+    com.spawn().insert_bundle(MaterialMeshBundle {
         mesh: building_objects,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        material,
+        material: material_handle,
         ..Default::default()
     });
 
     //Building Main
-    let main_lightmap = MaterialTexture::new(
-        asset_server,
-        "textures/scene2/walls_lightmap.jpg",
-        "main_lightmap",
-    );
-    let building_main = asset_server.load("models/scene2/building.glb#Mesh1/Primitive0");
+    let building_main = ass.load("models/scene2/building.glb#Mesh1/Primitive0");
 
-    let material = custom_materials.add(CustomMaterial {
-        material_properties,
-        textures: [
-            main_lightmap,
-            base_texture,
-            variation_texture,
-            reflection_texture,
-            walls_texture,
-        ],
-    });
+    material.lightmap = Some(ass.load("textures/scene2/walls_lightmap.jpg"));
+    material.lightmap_path = String::from("textures/scene2/walls_lightmap.jpg");
 
-    commands.spawn().insert_bundle(MaterialMeshBundle {
+    com.spawn().insert_bundle(MaterialMeshBundle {
         mesh: building_main,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
-        material,
+        material: custom_materials.add(material),
         ..Default::default()
     });
 
     //Sky Box
-    let skybox_texture = asset_server.load("textures/scene2/skybox.jpg");
-    let skybox = asset_server.load("models/scene2/skybox.glb#Mesh0/Primitive0");
-    commands.spawn().insert_bundle(MaterialMeshBundle {
+    let skybox_texture = ass.load("textures/scene2/skybox.jpg");
+    let skybox = ass.load("models/scene2/skybox.glb#Mesh0/Primitive0");
+    com.spawn().insert_bundle(MaterialMeshBundle {
         mesh: skybox,
         transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(10.0, 10.0, 10.0)),
         material: emissive_materials.add(EmissiveMaterial {
@@ -170,7 +141,7 @@ pub fn setup_room(
     //let blender_sun_rot = 248.0f32;
     ////Bevy Sun
     //let size: f32 = 250.0;
-    //commands.spawn_bundle(DirectionalLightBundle {
+    //com.spawn_bundle(DirectionalLightBundle {
     //    directional_light: DirectionalLight {
     //        // Configure the projection to better fit the scene
     //        shadow_projection: OrthographicProjection {
@@ -200,7 +171,7 @@ pub fn setup_room(
     //});
 
     //Sky Light for PBR
-    commands.spawn_bundle(PointLightBundle {
+    com.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(0.0, 100.0, 0.0),
         point_light: PointLight {
             intensity: 30000.0,
@@ -214,5 +185,5 @@ pub fn setup_room(
     });
 
     // Tell the asset server to watch for asset changes on disk:
-    asset_server.watch_for_changes().unwrap();
+    ass.watch_for_changes().unwrap();
 }

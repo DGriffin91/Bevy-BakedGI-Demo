@@ -4,9 +4,9 @@ version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-bevy = {version  = "0.7", features = ["jpeg"]}
-bevy_egui = "0.13"
-smooth-bevy-cameras = "0.4.0"
+bevy = {version  = "0.8", features = ["jpeg"]}
+bevy_egui = "0.15"
+bevy_basic_camera = { git = "https://github.com/DGriffin91/bevy_basic_camera" }
 rand = "*"
 
 # Enable only a small amount of optimization in debug mode
