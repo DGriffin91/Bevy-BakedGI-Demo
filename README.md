@@ -1,7 +1,7 @@
 # Bevy Baked GI Demo
 A demo scene with baked GI in Bevy
 
-Depends on bevy 0.8
+Depends on bevy 0.9
 
 Video showing the baking and texturing process:
 https://youtu.be/XhJ3bTOBDhI
