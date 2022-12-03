@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, window::CursorGrabMode};
 
 mod custom_material;
 mod emissive_material;
@@ -11,26 +11,29 @@ use custom_material::{set_texture_settings, CustomMaterial};
 use emissive_material::EmissiveMaterial;
 use planets::{planitary_physics, spawn_planets};
 
+#[derive(Component)]
+pub struct LevelItem;
+
+#[allow(clippy::too_many_arguments)]
 fn menu_ui(
     mut com: Commands,
-    query: Query<Entity>,
     mut windows: ResMut<Windows>,
     mut egui_context: ResMut<EguiContext>,
     mut custom_materials: ResMut<Assets<CustomMaterial>>,
     mut emissive_materials: ResMut<Assets<EmissiveMaterial>>,
     mut material_handles: Query<&mut Handle<CustomMaterial>>,
+    level_items: Query<Entity, With<LevelItem>>,
     asset_server: Res<AssetServer>,
     mut controllers: Query<&mut CameraController>,
 ) {
     let window = windows.get_primary_mut().unwrap();
-    let show_ui = window.is_focused() && !window.cursor_locked();
+    let show_ui = window.is_focused() && !(window.cursor_grab_mode() == CursorGrabMode::Locked);
     if show_ui {
         egui::Window::new("Settings").show(egui_context.ctx_mut(), |ui| {
             if ui.button("Load Level 1").clicked() {
-                for entity in query.iter() {
+                for entity in level_items.iter() {
                     com.entity(entity).despawn_recursive();
                 }
-                player(&mut com);
                 level1::setup_room(
                     &mut com,
                     &mut custom_materials,
@@ -39,10 +42,9 @@ fn menu_ui(
                 );
             }
             if ui.button("Load Level 2").clicked() {
-                for entity in query.iter() {
+                for entity in level_items.iter() {
                     com.entity(entity).despawn_recursive();
                 }
-                player(&mut com);
                 level2::setup_room(
                     &mut com,
                     &mut custom_materials,
@@ -74,9 +76,9 @@ fn menu_ui(
     }
 }
 
-fn player(com: &mut Commands) {
+fn player(mut com: Commands) {
     // camera
-    com.spawn_bundle(Camera3dBundle {
+    com.spawn(Camera3dBundle {
         transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     })
@@ -85,14 +87,17 @@ fn player(com: &mut Commands) {
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(AssetPlugin {
+            watch_for_changes: true,
+            ..default()
+        }))
         .add_plugin(EguiPlugin)
         .add_plugin(CameraControllerPlugin)
         .add_plugin(MaterialPlugin::<CustomMaterial>::default())
         .add_plugin(MaterialPlugin::<EmissiveMaterial>::default())
         .add_system(menu_ui)
         .add_startup_system(spawn_planets)
+        .add_startup_system(player)
         .add_system(planitary_physics)
         .add_system(set_texture_settings)
         .run();

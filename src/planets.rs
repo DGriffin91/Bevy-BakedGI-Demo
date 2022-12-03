@@ -24,7 +24,7 @@ pub fn spawn_planets(
         let mass = rng.gen_range(0.05..5.0);
 
         commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::UVSphere {
                     radius: mass * 0.1,
                     ..Default::default()

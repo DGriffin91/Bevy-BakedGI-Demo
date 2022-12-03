@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 use crate::custom_material::{load_mark, CustomMaterial, MaterialProperties, MaterialSetProp};
 use crate::emissive_material::EmissiveMaterial;
+use crate::LevelItem;
 
 pub fn setup_room(
     com: &mut Commands,
@@ -74,22 +75,23 @@ pub fn setup_room(
         material_properties,
         lightmap: Some(ass.load("textures/scene1/objects_lightmap.jpg")),
         lightmap_path: String::from("textures/scene1/objects_lightmap.jpg"),
-        base: Some(load_mark(com, &ass, "textures/concrete.jpg")),
+        base: Some(load_mark(com, ass, "textures/concrete.jpg")),
         base_path: String::from("textures/concrete.jpg"),
-        vary: Some(load_mark(com, &ass, "textures/detail.jpg")),
+        vary: Some(load_mark(com, ass, "textures/detail.jpg")),
         vary_path: String::from("textures/detail.jpg"),
-        reflection: Some(load_mark(com, &ass, "textures/scene1/reflection.jpg")),
+        reflection: Some(load_mark(com, ass, "textures/scene1/reflection.jpg")),
         reflection_path: String::from("textures/scene1/reflection.jpg"),
-        walls: Some(load_mark(com, &ass, "textures/concrete3.jpg")),
+        walls: Some(load_mark(com, ass, "textures/concrete3.jpg")),
         walls_path: String::from("textures/concrete3.jpg"),
     };
 
-    com.spawn().insert_bundle(MaterialMeshBundle {
+    com.spawn(MaterialMeshBundle {
         mesh: building_objects,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
         material: custom_materials.add(material.clone()),
         ..Default::default()
-    });
+    })
+    .insert(LevelItem);
 
     //Building Main
     let building_main = ass.load("models/scene1/building.glb#Mesh1/Primitive0");
@@ -97,17 +99,18 @@ pub fn setup_room(
     material.lightmap = Some(ass.load("textures/scene1/main_lightmap.jpg"));
     material.lightmap_path = String::from("textures/scene1/main_lightmap.jpg");
 
-    com.spawn().insert_bundle(MaterialMeshBundle {
+    com.spawn(MaterialMeshBundle {
         mesh: building_main,
         transform: Transform::from_xyz(0.0, 0.0, 0.0),
         material: custom_materials.add(material),
         ..Default::default()
-    });
+    })
+    .insert(LevelItem);
 
     //Sky Box
     let skybox_texture = ass.load("textures/scene1/skybox.jpg");
     let skybox = ass.load("models/scene1/skybox.glb#Mesh0/Primitive0");
-    com.spawn().insert_bundle(MaterialMeshBundle {
+    com.spawn(MaterialMeshBundle {
         mesh: skybox,
         transform: Transform::from_xyz(0.0, 0.0, 0.0).with_scale(Vec3::new(10.0, 10.0, 10.0)),
         material: emissive_materials.add(EmissiveMaterial {
@@ -115,11 +118,12 @@ pub fn setup_room(
             emissive_texture: Some(skybox_texture),
         }),
         ..Default::default()
-    });
+    })
+    .insert(LevelItem);
 
     //Bevy Sun
     let size: f32 = 50.0;
-    com.spawn_bundle(DirectionalLightBundle {
+    com.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
             shadow_projection: OrthographicProjection {
@@ -146,10 +150,11 @@ pub fn setup_room(
             ..Default::default()
         },
         ..Default::default()
-    });
+    })
+    .insert(LevelItem);
 
     //Sky Light for PBR
-    com.spawn_bundle(PointLightBundle {
+    com.spawn(PointLightBundle {
         transform: Transform::from_xyz(0.0, 5.0, 100.0),
         point_light: PointLight {
             intensity: 30000.0,
@@ -160,7 +165,8 @@ pub fn setup_room(
             ..Default::default()
         },
         ..Default::default()
-    });
+    })
+    .insert(LevelItem);
 
     // Only doing a couple light positions because Bevy complains:
     // WARN bevy_pbr::render::light: Cluster light index lists is full!
@@ -178,7 +184,7 @@ pub fn setup_room(
     ];
 
     for lamp_loc in lamp_locations {
-        com.spawn_bundle(PointLightBundle {
+        com.spawn(PointLightBundle {
             transform: Transform::from_xyz(lamp_loc.x, lamp_loc.y, lamp_loc.z),
             point_light: PointLight {
                 intensity: 500.0,
@@ -189,9 +195,7 @@ pub fn setup_room(
                 ..Default::default()
             },
             ..Default::default()
-        });
+        })
+        .insert(LevelItem);
     }
-
-    // Tell the asset server to watch for asset changes on disk:
-    ass.watch_for_changes().unwrap();
 }

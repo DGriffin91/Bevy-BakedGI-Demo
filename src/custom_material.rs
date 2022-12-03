@@ -123,7 +123,7 @@ fn load_button(
     ui.horizontal(|ui| {
         ui.text_edit_singleline(path);
         if ui.button("LOAD").clicked() {
-            *image_handle = Some(load_mark(com, &ass, &*path));
+            *image_handle = Some(load_mark(com, ass, &*path));
         }
     });
 }
@@ -156,7 +156,7 @@ impl CustomMaterial {
 
 pub fn load_mark(com: &mut Commands, ass: &AssetServer, path: &str) -> Handle<Image> {
     let handle = ass.load(path);
-    com.spawn().insert(NeedsTextureSetup(handle.clone()));
+    com.spawn(NeedsTextureSetup(handle.clone()));
     handle
 }
 
